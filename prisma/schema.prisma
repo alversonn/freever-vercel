@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model PatientRecord {
+  id                  Int       @id @default(autoincrement())
+  createdAt           DateTime  @default(now())
+  
+  // Data Diri Pasien
+  name                String
+  age                 Int
+  gender              String
+  dateOfBirth         DateTime // <-- KOLOM INI HILANG
+  address             String   // <-- KOLOM INI HILANG
+
+  // Data Klinis
+  pulseWeak           Boolean
+  consciousnessPoor   Boolean
+  oxygenSaturation    Float
+  leukocyteCount      Float
+  neutrophilCount     Float
+  lymphocyteCount     Float
+  crpLevel            Float
+  feverDuration       Int
+  nlcrResult          Float
+  
+  // Hasil Diagnosis
+  diagnosis           String
+  recommendation      String
+
+  @@map("patient_records")
+}

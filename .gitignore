@@ -1,0 +1,27 @@
+# Dependencies
+/node_modules
+
+# Build output
+/.next/
+/out/
+
+# Prisma
+# Hapus baris di bawah jika Anda ingin backup skema Anda
+# prisma/schema.prisma 
+# File database SQLite tidak boleh diunggah
+prisma/dev.db
+prisma/dev.db-journal
+
+# VSCode
+.vscode/
+
+# Mac
+.DS_Store
+*.pem
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
