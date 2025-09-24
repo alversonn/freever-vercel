@@ -1,0 +1,32 @@
+-- CreateTable
+CREATE TABLE "public"."patient_records" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "name" TEXT NOT NULL,
+    "age" INTEGER NOT NULL,
+    "gender" TEXT NOT NULL,
+    "dateOfBirth" TIMESTAMP(3) NOT NULL,
+    "pulseWeak" BOOLEAN NOT NULL,
+    "consciousnessPoor" BOOLEAN NOT NULL,
+    "oxygenSaturation" DOUBLE PRECISION NOT NULL,
+    "leukocyteCount" DOUBLE PRECISION NOT NULL,
+    "neutrophilCount" DOUBLE PRECISION NOT NULL,
+    "lymphocyteCount" DOUBLE PRECISION NOT NULL,
+    "crpLevel" DOUBLE PRECISION,
+    "feverDuration" INTEGER NOT NULL,
+    "nlcrResult" DOUBLE PRECISION NOT NULL,
+    "nausea" BOOLEAN NOT NULL DEFAULT false,
+    "vomiting" BOOLEAN NOT NULL DEFAULT false,
+    "lossOfAppetite" BOOLEAN NOT NULL DEFAULT false,
+    "severeBleeding" BOOLEAN NOT NULL DEFAULT false,
+    "respiratoryProblems" BOOLEAN NOT NULL DEFAULT false,
+    "seizure" BOOLEAN NOT NULL DEFAULT false,
+    "severeDehydration" BOOLEAN NOT NULL DEFAULT false,
+    "shockSign" BOOLEAN NOT NULL DEFAULT false,
+    "diagnosis" TEXT NOT NULL,
+    "recommendation" TEXT NOT NULL,
+    "sensitivity" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "specificity" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "patient_records_pkey" PRIMARY KEY ("id")
+);
