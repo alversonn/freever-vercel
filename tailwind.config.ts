@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss"
-import tailwindcssAnimate from "tailwindcss-animate" // <-- 1. Tambahkan import di sini
+import tailwindcssAnimate from "tailwindcss-animate"
 
 const config: Config = {
   darkMode: ["class"],
@@ -7,7 +7,7 @@ const config: Config = {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}', // Paling penting, memindai semua file di src
   ],
   prefix: "",
   theme: {
@@ -19,10 +19,10 @@ const config: Config = {
       },
     },
     extend: {
-      // ...
+      // Tema custom Anda bisa ditambahkan di sini
     },
   },
-  plugins: [tailwindcssAnimate], // <-- 2. Ganti 'require(...)' dengan variabel ini
+  plugins: [tailwindcssAnimate],
 }
 
 export default config
