@@ -49,6 +49,7 @@
   }
 }
 
+/* Hapus blok '*' dan pindahkan 'border-border' ke body */
 @layer base {
   body {
     @apply bg-background text-foreground;
