@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import tailwindcssAnimate from "tailwindcss-animate" // <-- 1. Tambahkan import di sini
 
 const config: Config = {
   darkMode: ["class"],
@@ -20,7 +21,7 @@ const config: Config = {
       // Tema custom Anda bisa ditambahkan di sini
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate], // <-- 2. Ganti 'require(...)' dengan variabel ini
 }
 
 export default config
