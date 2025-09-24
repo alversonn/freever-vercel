@@ -16,7 +16,7 @@ model PatientRecord {
   age                 Int
   gender              String
   dateOfBirth         DateTime // <-- KOLOM INI HILANG
-  address             String   // <-- KOLOM INI HILANG
+  
 
   // Data Klinis
   pulseWeak           Boolean
@@ -25,13 +25,24 @@ model PatientRecord {
   leukocyteCount      Float
   neutrophilCount     Float
   lymphocyteCount     Float
-  crpLevel            Float
+  crpLevel            Float?
   feverDuration       Int
   nlcrResult          Float
+
+  nausea                Boolean  @default(false)
+  vomiting              Boolean  @default(false)
+  lossOfAppetite        Boolean  @default(false)
+  severeBleeding        Boolean  @default(false)
+  respiratoryProblems   Boolean  @default(false)
+  seizure               Boolean  @default(false)
+  severeDehydration     Boolean  @default(false)
+  shockSign             Boolean  @default(false)
   
   // Hasil Diagnosis
   diagnosis           String
   recommendation      String
+  sensitivity           Float    @default(0)
+  specificity           Float    @default(0)
 
   @@map("patient_records")
 }

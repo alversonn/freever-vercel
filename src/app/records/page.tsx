@@ -13,7 +13,7 @@ interface PatientRecord {
   diagnosis: string;
   createdAt: string; // <-- 'createdAt' untuk kolom "Date"
   dateOfBirth?: string;
-  address?: string;
+ 
 }
 
 export default function RecordsPage() {
@@ -65,7 +65,7 @@ export default function RecordsPage() {
               <th scope="col" className="px-6 py-3">Name</th>
               <th scope="col" className="px-6 py-3">Date of Birth</th>
               <th scope="col" className="px-6 py-3">Age</th>
-              <th scope="col" className="px-6 py-3">Address</th>
+
               <th scope="col" className="px-6 py-3">Diagnosis</th>
               <th scope="col" className="px-6 py-3">Date</th>
               <th scope="col" className="px-6 py-3">Actions</th>
@@ -85,7 +85,7 @@ export default function RecordsPage() {
                   <td className="px-6 py-4 font-medium text-gray-900">{record.name}</td>
                   <td className="px-6 py-4">{record.dateOfBirth ? new Date(record.dateOfBirth).toLocaleDateString() : 'N/A'}</td>
                   <td className="px-6 py-4">{record.age}</td>
-                  <td className="px-6 py-4">{record.address || 'N/A'}</td>
+
                   <td className="px-6 py-4">{record.diagnosis}</td>
                   <td className="px-6 py-4">{new Date(record.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
