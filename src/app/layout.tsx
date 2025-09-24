@@ -1,20 +1,20 @@
+// src/app/layout.tsx (SERVER component — tanpa "use client")
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Layout from "@/components/Layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Freever App",
+  title: { default: "Freever App", template: "%s • Freever" },
   description: "Clinical Decision Support for Fever Diagnosis",
-  // --- TAMBAHKAN BLOK INI UNTUK MENGGANTI FAVICON ---
-  icons: {
-    icon: "/logo-unpad.png", // Menunjuk ke file logo Anda
-  },
-  // ----------------------------------------------------
+  icons: { icon: "/favicon.ico" }, // sesuaikan kalau perlu
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (<html lang="en"><body>{children}</body></html>);
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
 }
