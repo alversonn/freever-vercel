@@ -61,14 +61,14 @@ export default function Layout({ children }) {
           </nav>
           
           {/* Bagian Profil Pengguna (didorong ke bawah dengan mt-auto) */}
-          <div className="mt-auto p-4 border-t">
+          {/* <div className="mt-auto p-4 border-t">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center font-bold">
                 N
               </div>
-              <span className="font-semibold">Nama Pengguna</span>
+              <span className="font-semibold">Freever</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </aside>
 

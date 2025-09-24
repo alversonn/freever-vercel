@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { AlertTriangle, FlaskConical, Stethoscope, Save, CircleCheck, User, Thermometer, TestTube2, FileText } from 'lucide-react';
+import type { CheckedState } from "@radix-ui/react-checkbox";
+
 
 // Tipe Data untuk form
 interface FormData {
@@ -71,9 +73,12 @@ export default function NewAssessmentPage() {
     setFormData(prevData => ({ ...prevData, [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value }));
   }, []);
 
-  const handleCheckboxChange = useCallback((name: keyof FormData, checked: boolean) => {
-    setFormData(prevData => ({ ...prevData, [name]: checked }));
-  }, []);
+  const handleCheckboxChange = <K extends keyof FormData>(
+    key: K,
+    v: CheckedState
+  ) => {
+    setFormData(prev => ({ ...prev, [key]: v === true }));
+  }; 
 
   const handleGenderChange = useCallback((value: string) => {
     setFormData(prevData => ({ ...prevData, gender: value }));
@@ -210,7 +215,14 @@ export default function NewAssessmentPage() {
             <CardHeader><CardTitle className="flex items-center gap-2 font-bold text-xl text-red-600"><Thermometer size={24} /> Step 1: Emergency Assessment</CardTitle><CardDescription>Evaluate patient for emergency signs requiring hospital referral</CardDescription></CardHeader>
             <CardContent className="space-y-6 pt-6">
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-2"><Checkbox id="pulseWeak" checked={formData.pulseWeak} onCheckedChange={(c) => handleCheckboxChange('pulseWeak', !!c)} /><Label htmlFor="pulseWeak">Weak pulse (Nadi lemah)</Label></div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="pulseWeak"
+                    checked={formData.pulseWeak}
+                    onCheckedChange={(v: CheckedState) => handleCheckboxChange("pulseWeak", v)}
+                  />
+                  <Label htmlFor="pulseWeak">Weak pulse (Nadi lemah)</Label>
+                </div>
                   <div className="flex items-center space-x-2"><Checkbox id="consciousnessPoor" checked={formData.consciousnessPoor} onCheckedChange={(c) => handleCheckboxChange('consciousnessPoor', !!c)} /><Label htmlFor="consciousnessPoor">Poor consciousness (Kesadaran buruk)</Label></div>
                   <div className="flex items-center space-x-2 max-w-xs"><Label htmlFor="oxygenSaturation" className="whitespace-nowrap">Oxygen saturation (%):</Label><Input id="oxygenSaturation" name="oxygenSaturation" type="number" value={formData.oxygenSaturation} onChange={handleInputChange} /></div>
                 </div>
