@@ -1,34 +1,37 @@
-import type { NextRequest } from "next/server";
+// src/middleware.ts
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(req: NextRequest) {
-  const token =
-    req.cookies.get("__Secure-next-auth.session-token")?.value ??
-    req.cookies.get("next-auth.session-token")?.value;
-
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const protectedPath =
-    pathname.startsWith("/assessment") || pathname.startsWith("/records");
 
-  if (protectedPath && !token) {
-    const loginUrl = new URL("/login", req.url);
-    // optional: bawa info from=
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Public routes
+  const publicPaths = ["/", "/login", "/signup"];
+  if (publicPaths.includes(pathname)) return NextResponse.next();
+
+  // Jangan ganggu API & static
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico" ||
+    pathname.startsWith("/images")
+  ) {
+    return NextResponse.next();
   }
 
-  // tambah header no-cache untuk halaman protected
-  if (protectedPath) {
-    const res = NextResponse.next();
-    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-    res.headers.set("Pragma", "no-cache");
-    res.headers.set("Expires", "0");
-    return res;
+  // Guard halaman private
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  if (!token) {
+    const url = new URL("/login", req.url);
+    url.searchParams.set("from", pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
+// Hanya proteksi halaman ini
 export const config = {
-  matcher: ["/assessment/:path*", "/records/:path*"],
+  matcher: ["/assessment", "/records", "/records/:path*"],
 };

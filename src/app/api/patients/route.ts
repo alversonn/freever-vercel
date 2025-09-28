@@ -1,4 +1,3 @@
-// src/app/api/patients/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -7,7 +6,6 @@ import { authOptions } from "@/lib/auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** ========= Helpers (tanpa any) ========= */
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
@@ -45,15 +43,13 @@ function mustDate(v: unknown, name: string): Date {
 function toNullableNumber(v: unknown): number | null | undefined {
   if (v === undefined) return undefined;
   if (v === null) return null;
-  if (typeof v === "number") return v;
-  if (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v))) {
-    return Number(v);
-  }
-  throw new Error("Invalid number");
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isNaN(n) ? undefined : n;
 }
 function optBool(v: unknown): boolean | undefined {
   try {
-    return v === undefined ? undefined : mustBool(v, "bool");
+    if (v === undefined) return undefined;
+    return mustBool(v, "bool");
   } catch {
     return undefined;
   }
@@ -63,51 +59,33 @@ function optFloat(v: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
-/** ==== tipe bantu biar TS tahu user.id ada ==== */
-type SessionWithId =
-  | {
-      user?: {
-        id?: string;
-        name?: string | null;
-        email?: string | null;
-        image?: string | null;
-      } | null;
-    }
-  | null;
-
-/** ========= Handlers ========= */
-
-/** GET /api/patients (butuh login) */
+/** GET /api/patients (login required) */
 export async function GET() {
-  const session = (await getServerSession(authOptions)) as SessionWithId;
-  const userId = session?.user?.id;
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await getServerSession(authOptions);
+  // @ts-ignore added by callbacks
+  const userId: string | undefined = session?.user?.id;
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const records = await prisma.patientRecord.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
   });
-
   return NextResponse.json(records);
 }
 
-/** POST /api/patients (butuh login) */
+/** POST /api/patients (login required) */
 export async function POST(req: Request) {
   try {
-    const session = (await getServerSession(authOptions)) as SessionWithId;
-    const userId = session?.user?.id;
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getServerSession(authOptions);
+    // @ts-ignore added by callbacks
+    const userId: string | undefined = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const raw = (await req.json()) as unknown;
     if (!isRecord(raw)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    // ===== REQUIRED (harus cocok dengan schema) =====
     const name = mustString(raw.name, "name");
     const age = mustInt(raw.age, "age");
     const gender = mustString(raw.gender, "gender");
@@ -125,7 +103,6 @@ export async function POST(req: Request) {
     const diagnosis = mustString(raw.diagnosis, "diagnosis");
     const recommendation = mustString(raw.recommendation, "recommendation");
 
-    // ===== OPTIONAL =====
     const crp = toNullableNumber(raw.crpLevel);
     const nausea = optBool(raw.nausea);
     const vomiting = optBool(raw.vomiting);
@@ -135,12 +112,11 @@ export async function POST(req: Request) {
     const seizure = optBool(raw.seizure);
     const severeDehydration = optBool(raw.severeDehydration);
     const shockSign = optBool(raw.shockSign);
-
     const sensitivity = optFloat(raw.sensitivity);
     const specificity = optFloat(raw.specificity);
 
     const data = {
-      userId, // ← penting!
+      userId,
       name,
       age,
       gender,
