@@ -42,7 +42,6 @@ function mustDate(v: unknown, name: string): Date {
   }
   throw new Error(`Invalid date "${name}"`);
 }
-/** number|null|undefined → untuk field nullable opsional (crpLevel) */
 function toNullableNumber(v: unknown): number | null | undefined {
   if (v === undefined) return undefined;
   if (v === null) return null;
@@ -52,7 +51,6 @@ function toNullableNumber(v: unknown): number | null | undefined {
   }
   throw new Error("Invalid number");
 }
-/** optional boolean/float (kalau invalid, di-skip) */
 function optBool(v: unknown): boolean | undefined {
   try {
     return v === undefined ? undefined : mustBool(v, "bool");
@@ -65,34 +63,42 @@ function optFloat(v: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
+/** ==== tipe bantu biar TS tahu user.id ada ==== */
+type SessionWithId =
+  | {
+      user?: {
+        id?: string;
+        name?: string | null;
+        email?: string | null;
+        image?: string | null;
+      } | null;
+    }
+  | null;
+
 /** ========= Handlers ========= */
 
 /** GET /api/patients (butuh login) */
 export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const records = await prisma.patientRecord.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(records);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    console.error("API GET ERROR:", err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+  const session = (await getServerSession(authOptions)) as SessionWithId;
+  const userId = session?.user?.id;
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const records = await prisma.patientRecord.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(records);
 }
 
 /** POST /api/patients (butuh login) */
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = (await getServerSession(authOptions)) as SessionWithId;
+    const userId = session?.user?.id;
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -133,11 +139,8 @@ export async function POST(req: Request) {
     const sensitivity = optFloat(raw.sensitivity);
     const specificity = optFloat(raw.specificity);
 
-    const userId = session.user.id;
-
-    // Tidak kirim undefined ke Prisma
     const data = {
-      userId,
+      userId, // ← penting!
       name,
       age,
       gender,
