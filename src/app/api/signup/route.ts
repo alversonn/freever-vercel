@@ -5,6 +5,17 @@ import { hash } from "bcrypt";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// --- TAMBAHKAN FUNGSI OPTIONS INI ---
+export async function OPTIONS() {
+    return new NextResponse(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
