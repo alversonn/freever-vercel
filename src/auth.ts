@@ -1,14 +1,7 @@
-// src/lib/auth.ts
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import { compare } from "bcrypt";
-import { z } from "zod";
-
-const CredentialsSchema = z.object({
-  identifier: z.string().min(1),
-  password: z.string().min(1),
-});
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -17,14 +10,13 @@ export const authOptions: NextAuthOptions = {
     Credentials({
       name: "Credentials",
       credentials: {
-        identifier: { label: "Email / Phone / Username", type: "text" },
+        identifier: { label: "Email/Phone/Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(raw) {
-        const parsed = CredentialsSchema.safeParse(raw);
-        if (!parsed.success) return null;
-
-        const { identifier, password } = parsed.data;
+      async authorize(creds) {
+        if (!creds) return null;
+        const { identifier, password } = creds as any;
+        if (!identifier || !password) return null;
 
         const user = await prisma.user.findFirst({
           where: {
@@ -40,30 +32,32 @@ export const authOptions: NextAuthOptions = {
         const ok = await compare(password, user.hashedPassword);
         if (!ok) return null;
 
-        // minimal data utk JWT
+        // return field minimal + id
         return {
           id: user.id,
           name: user.name,
           email: user.email ?? undefined,
-        };
+          username: user.username,
+        } as any;
       },
     }),
   ],
   pages: {
     signIn: "/login",
+    error: "/login", // kalau error 500/401 → balik ke /login
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // @ts-ignore – taruh id ke token
         token.id = (user as any).id;
+        (token as any).username = (user as any).username;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        // @ts-ignore – expose id ke session.user.id
-        session.user.id = token.id as string;
+        (session.user as any).id = (token as any).id;
+        (session.user as any).username = (token as any).username;
       }
       return session;
     },
