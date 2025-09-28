@@ -1,34 +1,54 @@
+// middleware.ts
+import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
+    const pathname = req.nextUrl.pathname;
 
-  // Public pages
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/") {
-    return NextResponse.next();
+    // Jika user sudah login dan mencoba mengakses halaman login/signup, arahkan mereka
+    if (token && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
+      if (token.username === 'admin') {
+        return NextResponse.redirect(new URL("/records", req.url));
+      }
+      return NextResponse.redirect(new URL("/assessment", req.url));
+    }
+
+    // Jika user adalah admin dan mencoba mengakses rute non-admin (seperti assessment)
+    if (token?.username === 'admin' && pathname.startsWith('/assessment')) {
+      return NextResponse.redirect(new URL('/records', req.url));
+    }
+
+    // Jika user biasa mencoba mengakses rute admin (jika ada)
+    if (token?.username !== 'admin' && pathname.startsWith('/admin')) { // Ganti '/admin' jika perlu
+        return NextResponse.redirect(new URL('/assessment', req.url));
+    }
+  },
+  {
+    callbacks: {
+      // Callback 'authorized' akan berjalan sebelum 'middleware'.
+      // Jika mengembalikan false, middleware tidak akan pernah dijalankan.
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl;
+        // Izinkan akses ke halaman login dan signup bahkan jika belum terotentikasi
+        if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
+            return true;
+        }
+        // Untuk halaman lain, user harus punya token (sudah login)
+        return !!token;
+      },
+    },
   }
-
-  // Penting: JANGAN ganggu API/static
-  if (
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
-  ) {
-    return NextResponse.next();
-  }
-
-  // Proteksi halaman private
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  if (!token) {
-    const url = new URL("/login", req.url);
-    url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
-  }
-  return NextResponse.next();
-}
+);
 
 export const config = {
-  matcher: ["/assessment", "/records", "/records/:path*"],
+  // Lindungi semua rute kecuali rute statis dan API tertentu
+  matcher: [
+    "/assessment/:path*",
+    "/records/:path*",
+    "/login",
+    "/signup",
+    // Tambahkan rute admin lain jika ada
+  ],
 };
