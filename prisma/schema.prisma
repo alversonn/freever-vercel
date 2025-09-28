@@ -1,20 +1,59 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
+// datasource db: Bagian ini sudah benar
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
+// generator client: Bagian ini sudah benar
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Enum untuk Role dan Gender agar lebih konsisten
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+model User {
+  id              String          @id @default(cuid())
+  name            String
+  username        String          @unique
+  email           String?         @unique
+  phone           String?         @unique
+  birthPlace      String
+  dateOfBirth     DateTime?
+  gender          Gender?
+  institution     String
+  hashedPassword  String
+  role            Role            @default(USER)
+  createdAt       DateTime        @default(now())
+
+  // Relasi NextAuth
+  accounts        Account[]
+  sessions        Session[]
+  
+  // Relasi ke PatientRecord
+  patientRecords  PatientRecord[]
+}
+
 model PatientRecord {
   id                  Int      @id @default(autoincrement())
   createdAt           DateTime @default(now())
+
+  // Data Pasien (Diambil dari User saat pembuatan)
   name                String
   age                 Int
   gender              String
   dateOfBirth         DateTime
+
+  // Data Klinis
   pulseWeak           Boolean
   consciousnessPoor   Boolean
   oxygenSaturation    Float
@@ -32,29 +71,55 @@ model PatientRecord {
   seizure             Boolean  @default(false)
   severeDehydration   Boolean  @default(false)
   shockSign           Boolean  @default(false)
+
+  // Hasil Diagnosis
   diagnosis           String
   recommendation      String
   sensitivity         Float    @default(0)
   specificity         Float    @default(0)
-  userId              String
-  user                User     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
-  @@index([userId], map: "patient_records_userid_idx")
+  // Relasi ke User
+  authorId            String // Diubah ke String agar cocok dengan ID User
+  author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   @@map("patient_records")
 }
 
-model User {
-  id             String          @id @default(cuid())
-  createdAt      DateTime        @default(now())
-  name           String
-  username       String          @unique
-  email          String?         @unique
-  phone          String?         @unique
-  birthPlace     String
-  dateOfBirth    DateTime?
-  gender         String?
-  institution    String
-  hashedPassword String
-  records        PatientRecord[]
+
+// --- MODEL BAWAAN UNTUK NEXT-AUTH ---
+// Model ini wajib ada jika Anda menggunakan Adapter Prisma
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

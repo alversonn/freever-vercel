@@ -584,10 +584,7 @@ export default function RecordDetailPage() {
               )}
             </div>
 
-            <fieldset
-              disabled={isEditing && isEmergencyCase}
-              className="disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <fieldset className="disabled:cursor-not-allowed disabled:opacity-50">
               <h4 className="mb-2 font-semibold text-gray-800">Blood Test Results</h4>
               {isEditing && isEmergencyCase && (
                 <p className="mb-2 text-sm text-red-600">

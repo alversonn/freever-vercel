@@ -1,3 +1,4 @@
+// src/lib/auth.ts
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
@@ -17,24 +18,26 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
         const { identifier, password } = credentials as Record<string, string>;
-// --- LOGIKA BARU UNTUK ADMIN ---
-        // 1. Cek apakah ini adalah user admin spesial
+
+        // --- LOGIKA KHUSUS ADMIN ---
         if (identifier === 'admin' && password === 'admin') {
-            // Jika cocok, kembalikan objek user untuk admin tanpa cek database
-            return { id: 'admin-user', name: 'Administrator', username: 'admin' };
-          }
+          // Kembalikan objek user "palsu" untuk admin tanpa perlu cek database
+          // ID sengaja dibuat unik agar tidak bentrok dengan ID dari database (cuid)
+          return { id: 'admin-user-01', name: 'Administrator', username: 'admin' };
+        }
+        // --- AKHIR LOGIKA ADMIN ---
 
+        // Logika untuk user biasa dari database
         if (!identifier || !password) return null;
-
         const user = await prisma.user.findFirst({
           where: {
             OR: [{ email: identifier }, { phone: identifier }, { username: identifier }],
           },
         });
-        if (!user) return null;
-        
-        const ok = await compare(password, user.hashedPassword);
-        if (!ok) return null;
+        if (!user || !user.hashedPassword) return null;
+
+        const isPasswordCorrect = await compare(password, user.hashedPassword);
+        if (!isPasswordCorrect) return null;
 
         return { id: user.id, name: user.name, email: user.email ?? undefined, username: user.username };
       },
@@ -43,30 +46,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as any).id;
+        token.id = user.id;
         token.username = (user as any).username;
-        token.role = (user as any).role || 'ADMIN';
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id as string;
-        (session.user as any).username = token.username as string | undefined;
-        (session.user as any).role = token.role as "USER" | "ADMIN";
+        (session.user as any).username = token.username as string;
       }
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      // Hormati URL relatif seperti "/login" atau "/assessment"
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Izinkan URL yang sama origin
-      try {
-        const u = new URL(url);
-        if (u.origin === baseUrl) return url;
-      } catch {}
-      // Default fallback (mis. setelah login tanpa spesifik URL)
-      return `${baseUrl}/assessment`;
     },
   },
 };
