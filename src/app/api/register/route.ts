@@ -1,7 +1,7 @@
 // src/app/api/register/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
