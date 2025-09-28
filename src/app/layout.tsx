@@ -5,6 +5,9 @@ import AuthProvider from "@/components/providers/session-provider";
 export const metadata: Metadata = {
   title: "Freever App",
   description: "Clinical Decision Support for Fever Diagnosis",
+  icons: {
+    icon: "/freever-logo.png",
+  }
 };
 
 export default function RootLayout({

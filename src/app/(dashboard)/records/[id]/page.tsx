@@ -586,11 +586,6 @@ export default function RecordDetailPage() {
 
             <fieldset className="disabled:cursor-not-allowed disabled:opacity-50">
               <h4 className="mb-2 font-semibold text-gray-800">Blood Test Results</h4>
-              {isEditing && isEmergencyCase && (
-                <p className="mb-2 text-sm text-red-600">
-                  Blood test data cannot be edited for emergency referral cases.
-                </p>
-              )}
               <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <Field
                   label="Leukocyte"
