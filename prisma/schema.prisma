@@ -3,23 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model PatientRecord {
-  id                  Int       @id @default(autoincrement())
-  createdAt           DateTime  @default(now())
-  
-  // Data Diri Pasien
+  id                  Int      @id @default(autoincrement())
+  createdAt           DateTime @default(now())
   name                String
   age                 Int
   gender              String
-  dateOfBirth         DateTime // <-- KOLOM INI HILANG
-  
-
-  // Data Klinis
+  dateOfBirth         DateTime
   pulseWeak           Boolean
   consciousnessPoor   Boolean
   oxygenSaturation    Float
@@ -29,21 +24,37 @@ model PatientRecord {
   crpLevel            Float?
   feverDuration       Int
   nlcrResult          Float
-
-  nausea                Boolean  @default(false)
-  vomiting              Boolean  @default(false)
-  lossOfAppetite        Boolean  @default(false)
-  severeBleeding        Boolean  @default(false)
-  respiratoryProblems   Boolean  @default(false)
-  seizure               Boolean  @default(false)
-  severeDehydration     Boolean  @default(false)
-  shockSign             Boolean  @default(false)
-  
-  // Hasil Diagnosis
+  nausea              Boolean  @default(false)
+  vomiting            Boolean  @default(false)
+  lossOfAppetite      Boolean  @default(false)
+  severeBleeding      Boolean  @default(false)
+  respiratoryProblems Boolean  @default(false)
+  seizure             Boolean  @default(false)
+  severeDehydration   Boolean  @default(false)
+  shockSign           Boolean  @default(false)
   diagnosis           String
   recommendation      String
-  sensitivity           Float    @default(0)
-  specificity           Float    @default(0)
+  sensitivity         Float    @default(0)
+  specificity         Float    @default(0)
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
+  @@index([userId], map: "patient_records_userid_idx")
   @@map("patient_records")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  createdAt      DateTime        @default(now())
+  name           String
+  username       String          @unique
+  email          String?         @unique
+  phone          String?         @unique
+  birthPlace     String
+  dateOfBirth    DateTime?
+  gender         String?
+  institution    String
+  hashedPassword String
+  records        PatientRecord[]
 }
