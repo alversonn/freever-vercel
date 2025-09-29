@@ -102,9 +102,9 @@ const WARNING_LABELS = {
   vomiting: "Vomiting (Muntah)",
   lossOfAppetite: "No appetite (Tidak nafsu makan)",
   severeBleeding: "Severe bleeding (Pendarahan hebat)",
-  respiratoryProblems: "Severe respiratory problems",
+  respiratoryProblems: "Severe respiratory problems (Masalah pernapasan yang parah)",
   seizure: "Seizures (Kejang)",
-  severeDehydration: "Severe dehydration",
+  severeDehydration: "Severe dehydration (Dehidrasi yang parah)",
   shockSign: "Shock signs (Tanda-tanda syok)",
 } as const;
 type WarningKey = keyof typeof WARNING_LABELS;

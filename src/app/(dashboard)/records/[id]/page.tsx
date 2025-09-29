@@ -1,9 +1,10 @@
+// src/app/(dashboard)/records/[id]/page.tsx
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Save, Trash2, Edit, X, ChevronLeft } from "lucide-react";
+import { Save, Trash2, Edit, X, ChevronLeft, Printer } from "lucide-react";
 
 // Jika tidak pakai shadcn, ganti impor2 ini dengan elemen HTML biasa.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -436,6 +437,9 @@ export default function RecordDetailPage() {
           <ChevronLeft className="mr-2 h-4 w-4" /> Back to Records
         </Link>
         <div className="flex gap-2">
+        <Button onClick={() => window.print()} size="sm" variant="outline">
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
           {isEditing ? (
             <>
               <Button onClick={handleSave} size="sm" disabled={pending}>
@@ -452,7 +456,7 @@ export default function RecordDetailPage() {
           )}
         </div>
       </div>
-
+      <div id="print-area">
       <Card>
         <CardHeader>
           <CardTitle>Patient Record Details</CardTitle>
@@ -691,6 +695,7 @@ export default function RecordDetailPage() {
           </section>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }

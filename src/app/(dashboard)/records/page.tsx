@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, Eye } from "lucide-react";
+import { Trash2, Eye, FileDown } from "lucide-react";
 import Protected from "@/components/auth/Protected";
+import { Button } from "@/components/ui/button";
+import * as Papa from 'papaparse';
 
 interface PatientRecord {
   id: number;
@@ -18,6 +20,7 @@ function RecordsContent() {
   const [loading, setLoading] = useState(true);
 
   const fetchRecords = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/patients");
       if (!res.ok) throw new Error("Failed to fetch data");
@@ -46,13 +49,36 @@ function RecordsContent() {
     }
   };
 
+  const handleExport = () => {
+    if (records.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+    const csv = Papa.unparse(records);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `patient_records_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading patient records...</div>;
   }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4">Patient Records</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Patient Records</h1>
+        <Button onClick={handleExport} size="sm" variant="outline">
+          <FileDown className="mr-2 h-4 w-4" />
+          Export to CSV
+        </Button>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-600">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -67,33 +93,19 @@ function RecordsContent() {
           </thead>
           <tbody>
             {records.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center px-6 py-4 text-gray-500">
-                  No records found.
-                </td>
-              </tr>
+              <tr><td colSpan={6} className="text-center px-6 py-4 text-gray-500">No records found.</td></tr>
             ) : (
               records.map((record) => (
                 <tr key={record.id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{record.name}</td>
-                  <td className="px-6 py-4">
-                    {record.dateOfBirth ? new Date(record.dateOfBirth).toLocaleDateString() : "N/A"}
-                  </td>
+                  <td className="px-6 py-4">{record.dateOfBirth ? new Date(record.dateOfBirth).toLocaleDateString() : "N/A"}</td>
                   <td className="px-6 py-4">{record.age}</td>
                   <td className="px-6 py-4">{record.diagnosis}</td>
                   <td className="px-6 py-4">{new Date(record.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <Link href={`/records/${record.id}`} className="text-blue-600 hover:text-blue-900" aria-label="View detail">
-                        <Eye size={18} />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(record.id)}
-                        className="text-red-600 hover:text-red-900"
-                        aria-label="Delete record"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <Link href={`/records/${record.id}`} className="text-blue-600 hover:text-blue-900" aria-label="View detail"><Eye size={18} /></Link>
+                      <button onClick={() => handleDelete(record.id)} className="text-red-600 hover:text-red-900" aria-label="Delete record"><Trash2 size={18} /></button>
                     </div>
                   </td>
                 </tr>
@@ -106,7 +118,6 @@ function RecordsContent() {
   );
 }
 
-/** Default export: dibungkus proteksi */
 export default function Page() {
   return (
     <Protected>

@@ -14,6 +14,13 @@ export default withAuth(
       }
       return NextResponse.redirect(new URL("/assessment", req.url));
     }
+    const response = NextResponse.next();
+    // Atur header untuk mencegah browser menyimpan cache halaman ini
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   },
   {
     callbacks: {
