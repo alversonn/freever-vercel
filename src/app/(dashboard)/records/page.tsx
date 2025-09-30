@@ -50,6 +50,71 @@ interface PatientRecord {
   userId?: string | null;
 }
 
+/** ====== Util untuk export ====== */
+const EXCLUDE_KEYS = new Set(["id", "createdAt", "authorId"]);
+
+// format hanya tanggal (tanpa jam)
+const fmtDateOnly = (v: unknown): string => {
+  if (!v) return "—";
+  const d = v instanceof Date ? v : new Date(String(v));
+  return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString();
+};
+
+// Buat object baru untuk export: hapus kolom terlarang + format dateOfBirth
+function sanitizeForExport(rec: PatientRecord): Record<string, any> {
+  const out: Record<string, any> = {};
+  // Urutan utama yang umum dipakai (selain excluded)
+  const ORDER_BASE = [
+    "name",
+    "age",
+    "gender",
+    "dateOfBirth",
+    "pulseWeak",
+    "consciousnessPoor",
+    "oxygenSaturation",
+    "leukocyteCount",
+    "neutrophilCount",
+    "lymphocyteCount",
+    "crpLevel",
+    "feverDuration",
+    "nlcrResult",
+    "nausea",
+    "vomiting",
+    "lossOfAppetite",
+    "severeBleeding",
+    "respiratoryProblems",
+    "seizure",
+    "severeDehydration",
+    "shockSign",
+    "diagnosis",
+    "recommendation",
+    "sensitivity",
+    "specificity",
+    "userId",
+  ];
+
+  // masukkan sesuai ORDER_BASE jika ada di record
+  for (const key of ORDER_BASE) {
+    if (EXCLUDE_KEYS.has(key)) continue;
+    if (Object.prototype.hasOwnProperty.call(rec, key)) {
+      const v = (rec as any)[key];
+      if (key === "dateOfBirth") out[key] = fmtDateOnly(v);
+      else out[key] = v ?? "";
+    }
+  }
+
+  // tambahkan kunci lain yang mungkin ada, tapi tidak termasuk EXCLUDE_KEYS & belum dimasukkan
+  for (const key of Object.keys(rec)) {
+    if (EXCLUDE_KEYS.has(key)) continue;
+    if (key in out) continue;
+    const v = (rec as any)[key];
+    if (key === "dateOfBirth") out[key] = fmtDateOnly(v);
+    else out[key] = v ?? "";
+  }
+
+  return out;
+}
+
 /** ====== Content ====== */
 function RecordsContent() {
   const [records, setRecords] = useState<PatientRecord[]>([]);
@@ -92,7 +157,8 @@ function RecordsContent() {
   /** ====== Export CSV ====== */
   const handleExportCSV = () => {
     if (records.length === 0) return alert("No data to export.");
-    const csv = Papa.unparse(records);
+    const data = records.map(sanitizeForExport);
+    const csv = Papa.unparse(data);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -107,7 +173,8 @@ function RecordsContent() {
   /** ====== Export Excel ====== */
   const handleExportExcel = () => {
     if (records.length === 0) return alert("No data to export.");
-    const worksheet = XLSX.utils.json_to_sheet(records);
+    const data = records.map(sanitizeForExport);
+    const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Patient Records");
     XLSX.writeFile(workbook, "patient_records.xlsx");
@@ -117,9 +184,8 @@ function RecordsContent() {
   const handleExportPDF = () => {
     if (records.length === 0) return alert("No data to export.");
 
+    // definisikan urutan untuk PDF (tanpa id, createdAt, authorId)
     const ORDER: string[] = [
-      "id",
-      "createdAt",
       "name",
       "age",
       "gender",
@@ -145,13 +211,10 @@ function RecordsContent() {
       "recommendation",
       "sensitivity",
       "specificity",
-      "authorId",
       "userId",
     ];
 
     const LABELS: Record<string, string> = {
-      id: "ID",
-      createdAt: "Created At",
       name: "Name",
       age: "Age",
       gender: "Gender",
@@ -177,21 +240,15 @@ function RecordsContent() {
       recommendation: "Recommendation",
       sensitivity: "Sensitivity (%)",
       specificity: "Specificity (%)",
-      authorId: "Author Id",
       userId: "User Id",
     };
 
     const fmt = (k: string, v: unknown): string => {
       if (v === null || v === undefined || v === "") return "—";
+      if (k === "dateOfBirth") return fmtDateOnly(v);
       if (typeof v === "boolean") return v ? "Yes" : "No";
       if (typeof v === "number") return String(v);
-      if (typeof v === "string") {
-        if (k.toLowerCase().includes("date")) {
-          const d = new Date(v);
-          return isNaN(d.getTime()) ? v : d.toLocaleString();
-        }
-        return v;
-      }
+      if (typeof v === "string") return v;
       try {
         return JSON.stringify(v);
       } catch {
@@ -208,18 +265,27 @@ function RecordsContent() {
 
     let startY = margin;
 
-    records.forEach((rec: any, idx: number) => {
+    records.forEach((raw, idx) => {
+      // Sanitize dulu biar konsisten (hapus excluded + format DOB)
+      const rec = sanitizeForExport(raw);
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      // doc.text(`Record #${rec.id ?? idx + 1}`, margin, startY);
-      // startY += 8;
+  
 
       const rows: string[][] = [];
-      ORDER.forEach((k) => {
+      // tampilkan sesuai ORDER, lalu sisanya
+      const already = new Set<string>();
+      for (const k of ORDER) {
         if (Object.prototype.hasOwnProperty.call(rec, k)) {
-          rows.push([LABELS[k] ?? k, fmt(k, rec[k])]);
+          rows.push([LABELS[k] ?? k, fmt(k, (rec as any)[k])]);
+          already.add(k);
         }
-      });
+      }
+      for (const k of Object.keys(rec)) {
+        if (already.has(k)) continue;
+        rows.push([LABELS[k] ?? k, fmt(k, (rec as any)[k])]);
+      }
 
       autoTable(doc, {
         startY: startY + 6,
@@ -251,7 +317,7 @@ function RecordsContent() {
 
   if (!isClient || loading) {
     return <div className="p-6 text-center">Loading patient records...</div>;
-  }
+    }
 
   const rows = records;
 
@@ -260,7 +326,6 @@ function RecordsContent() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <h1 className="text-2xl font-bold">Patient Records</h1>
 
-        {/* Ganti dropdown dengan tiga tombol yang sederhana & stabil */}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
             <FileDown className="mr-2 h-4 w-4" />
@@ -301,7 +366,7 @@ function RecordsContent() {
                 <tr key={r.id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{r.name}</td>
                   <td className="px-6 py-4">
-                    {r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString() : "N/A"}
+                    {r.dateOfBirth ? fmtDateOnly(r.dateOfBirth) : "N/A"}
                   </td>
                   <td className="px-6 py-4">{r.age}</td>
                   <td className="px-6 py-4">{r.diagnosis ?? "—"}</td>
