@@ -730,6 +730,12 @@ function AssessmentContent() {
                   <Save className="mr-2 h-4 w-4" /> Save and Go to Records
                 </Button>
               </div>
+              {/* --- TAMBAHKAN REFERENSI DI SINI --- */}
+              <div className="mt-6 text-xs text-gray-500 border-t pt-4">
+                <p className="font-semibold mb-1">Referensi:</p>
+                <p>Prof. Bachti Alisjahbana, dr., Sp.PD-KPTI., Ph.D. (2025). Sekar Acute Undifferentiated Fever (AUF). <a href="https://youtu.be/a8YRxNn5Nas" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://youtu.be/a8YRxNn5Nas</a></p>
+              </div>
+              {/* ---------------------------------- */}
             </CardContent>
           </>
         );
